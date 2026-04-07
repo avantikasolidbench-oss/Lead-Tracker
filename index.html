@@ -258,7 +258,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
 #pane-invoice .freight-inline-input { border:none; border-bottom:1px dashed var(--inv-border); outline:none; font-family:'DM Sans',sans-serif; font-size:12px; width:80px; background:transparent; color:var(--inv-ink); text-align:right; padding:0 2px; }
 #pane-invoice .freight-inline-input:focus { border-bottom-color:var(--inv-accent); }
 #pane-invoice .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:flex; align-items:center; justify-content:center; }
-#pane-invoice .modal { background:#fff; border-radius:8px; padding:28px; width:480px; max-width:95vw; }
+#pane-invoice .modal { background:#fff; border-radius:8px; padding:28px; width:480px; max-width:95vw; max-height:90vh; overflow-y:auto; }
 #pane-invoice .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin-bottom:18px; color:var(--inv-ink); }
 #pane-invoice .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 #pane-invoice .modal-grid .full { grid-column:1/-1; }
@@ -3616,9 +3616,10 @@ let activeCategory = 'All';
 
 // ===================== TABS =====================
 function inv_switchTab(t) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&t==='catalog')||(i===1&&t==='details')));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&t==='catalog')||(i===1&&t==='details')||(i===2&&t==='load')));
   document.getElementById('tab-catalog').classList.toggle('active', t==='catalog');
   document.getElementById('tab-details').classList.toggle('active', t==='details');
+  const tabLoad=document.getElementById('tab-load');if(tabLoad)tabLoad.classList.toggle('active',t==='load');
 }
 
 // ===================== FETCH CATALOG FROM SHOPIFY =====================
@@ -4184,6 +4185,7 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
   <div class="sidebar-tabs">
     <button class="tab-btn active" onclick="inv_switchTab('catalog')">Catalog</button>
     <button class="tab-btn" onclick="inv_switchTab('details')">Details</button>
+    <button class="tab-btn" onclick="inv_switchTab('load')">Load</button>
   </div>
   <div class="sidebar-body">
     <!-- CATALOG TAB -->
@@ -4210,6 +4212,27 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
       <div class="form-group"><label>Address Line 2</label><input id="shipAddr2" oninput="inv_renderInvoice()"></div>
       <div class="form-group"><label>State</label><input id="shipState" oninput="inv_renderInvoice()"></div>
     </div>
+
+    <!-- LOAD TAB -->
+    <div class="tab-panel" id="tab-load">
+      <div class="section-sep" style="border-top:none;margin-top:0;padding-top:0">Load Invoice</div>
+      <p style="font-size:11px;color:#6a5e50;margin-bottom:12px;line-height:1.5">Drop a previously saved invoice HTML file to restore all items and details.</p>
+      <div id="inv-drop-zone"
+        style="border:2px dashed #3a3028;border-radius:6px;padding:24px 12px;text-align:center;font-size:12px;color:#6a5e50;cursor:pointer;background:#1e1a16;transition:all 0.2s;margin-bottom:12px"
+        ondragover="event.preventDefault();event.stopPropagation();this.style.background='#2e2820';this.style.borderColor='#c4922a';"
+        ondragleave="this.style.background='#1e1a16';this.style.borderColor='#3a3028';"
+        ondrop="event.preventDefault();event.stopPropagation();this.style.background='#1e1a16';this.style.borderColor='#3a3028';var f=event.dataTransfer.files[0];if(f&&f.name.endsWith('.html')){var inp=document.getElementById('inv-load-input');var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;inv_loadInvoiceFile(inp);}else{alert('Please drop an .html invoice file');}">
+        <div style="font-size:20px;margin-bottom:6px">📂</div>
+        <div style="color:#e8dfc8;font-weight:500">Drop .html file here</div>
+        <div style="font-size:10px;margin-top:4px">Drag your saved invoice onto this area</div>
+      </div>
+      <div style="text-align:center;font-size:10px;color:#6a5e50;margin-bottom:8px">— or —</div>
+      <label style="position:relative;overflow:hidden;display:block;width:100%;box-sizing:border-box;padding:9px;text-align:center;background:#2e2820;border:1px solid #3a3028;border-radius:4px;color:#e8dfc8;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer">
+        ↑ Browse for file
+        <input id="inv-load-input" type="file" accept=".html" onchange="inv_loadInvoiceFile(this)" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer">
+      </label>
+    </div>
+
   </div>
 </aside>
 <main class="main">
@@ -4269,14 +4292,9 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
 
   <!-- Action buttons at bottom — away from print area -->
   <div class="no-print" style="margin-top:20px">
-    <!-- Row 1: Load drag-drop zone -->
-    <div id="inv-drop-zone" style="margin-bottom:8px;border:2px dashed #d4c9b0;border-radius:6px;padding:18px 20px;text-align:center;font-family:'DM Sans',sans-serif;font-size:12px;color:#7a6e5f;cursor:pointer;background:#faf7f2;transition:background 0.2s"
-      ondragover="event.preventDefault();event.stopPropagation();this.style.background='#f0ebe0';this.style.borderColor='#c4922a';"
-      ondragleave="this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';"
-      ondrop="event.preventDefault();event.stopPropagation();this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';var f=event.dataTransfer.files[0];if(f&&f.name.endsWith('.html')){var inp=document.getElementById('inv-load-input');var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;inv_loadInvoiceFile(inp);}else{alert('Please drop an .html invoice file');}">
-      <div>↑ Drop invoice HTML file here</div>
-      <div style="margin-top:4px;font-size:11px;color:#a09080">Drag &amp; drop your saved invoice .html file</div>
-      <input id="inv-load-input" type="file" accept=".html" onchange="inv_loadInvoiceFile(this)" style="position:absolute;left:-9999px;opacity:0">
+    <!-- Row 1: Load — use sidebar Load tab -->
+    <div style="margin-bottom:8px">
+      <button class="btn btn-outline" style="display:block;width:100%;box-sizing:border-box" onclick="inv_switchTab('load')">↑ Load Invoice →</button>
     </div>
     <!-- Row 2: Save HTML + Clear All + Print -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -4310,8 +4328,10 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
       <div class="full">
         <label>Image (optional)</label>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <input type="file" id="m_img_file" accept="image/*" style="display:none" onchange="inv_handleImgUpload(this)">
-          <button type="button" onclick="document.getElementById('m_img_file').click()" style="background:#faf7f2;border:1px solid #d4c9b0;border-radius:4px;padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer">📁 Choose image</button>
+          <label style="position:relative;overflow:hidden;display:inline-block;background:#faf7f2;border:1px solid #d4c9b0;border-radius:4px;padding:5px 12px;font-family:inherit;font-size:12px;cursor:pointer">
+            📁 Choose image
+            <input type="file" id="m_img_file" accept="image/*" onchange="inv_handleImgUpload(this)" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer">
+          </label>
           <span id="m_img_filename" style="font-size:11px;color:#7a6e5f">No file chosen</span>
         </div>
         <div id="m_img_preview" style="display:none;margin-top:8px">
@@ -4333,5 +4353,115 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
 </div>
 
 </div><!-- end main-app -->
+
+<!-- DEBUG PANEL - toggle with Ctrl+Shift+D -->
+<div id="debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1410;color:#e8dfc8;font-family:monospace;font-size:11px;z-index:9999;max-height:40vh;overflow-y:auto;border-top:2px solid #c4922a">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#2e2820;border-bottom:1px solid #3a3028">
+    <strong>🐛 Debug Panel</strong>
+    <div style="display:flex;gap:8px">
+      <button onclick="dbgRunTest()" style="background:#c4922a;border:none;color:#fff;padding:3px 10px;border-radius:3px;font-size:11px;cursor:pointer">Run Tests</button>
+      <button onclick="dbgFixLoad()" style="background:#2F9E44;border:none;color:#fff;padding:3px 10px;border-radius:3px;font-size:11px;cursor:pointer">Fix Load</button>
+      <button onclick="document.getElementById('debug-panel').style.display='none'" style="background:#666;border:none;color:#fff;padding:3px 10px;border-radius:3px;font-size:11px;cursor:pointer">✕ Close</button>
+    </div>
+  </div>
+  <div id="debug-log" style="padding:8px 12px;line-height:1.6"></div>
+</div>
+
+<script>
+// Toggle debug panel with Ctrl+Shift+D
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+    var p = document.getElementById('debug-panel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'block') dbgRunTest();
+  }
+});
+
+function dbgLog(msg, ok) {
+  var log = document.getElementById('debug-log');
+  var color = ok === true ? '#69db7c' : ok === false ? '#ff6b6b' : '#e8dfc8';
+  log.innerHTML += '<div style="color:' + color + '">' + msg + '</div>';
+}
+
+function dbgRunTest() {
+  var log = document.getElementById('debug-log');
+  log.innerHTML = '<div style="color:#a09080">' + new Date().toLocaleTimeString() + ' — Running tests...</div>';
+
+  // Test 1: inv-load-input exists + dimensions
+  var inp = document.getElementById('inv-load-input');
+  dbgLog('1. inv-load-input exists: ' + !!inp, !!inp);
+  if (inp) {
+    var r = inp.getBoundingClientRect();
+    dbgLog('   offsetW×H: ' + inp.offsetWidth + '×' + inp.offsetHeight + '  rect w×h: ' + Math.round(r.width) + '×' + Math.round(r.height), inp.offsetWidth > 0 && inp.offsetHeight > 0);
+    dbgLog('   opacity: ' + getComputedStyle(inp).opacity + '  display: ' + getComputedStyle(inp).display + '  visibility: ' + getComputedStyle(inp).visibility, null);
+    dbgLog('   position: ' + getComputedStyle(inp).position + '  top: ' + getComputedStyle(inp).top + '  left: ' + getComputedStyle(inp).left, null);
+    var par = inp.parentElement;
+    dbgLog('   parent tag: ' + par.tagName + '  parent display: ' + getComputedStyle(par).display + '  parent overflow: ' + getComputedStyle(par).overflow, null);
+    var parR = par.getBoundingClientRect();
+    dbgLog('   parent w×h: ' + Math.round(parR.width) + '×' + Math.round(parR.height), parR.width > 0);
+  }
+
+  // Test 2: Load tab visible
+  var tabLoad = document.getElementById('tab-load');
+  dbgLog('2. tab-load panel exists: ' + !!tabLoad, !!tabLoad);
+  if (tabLoad) {
+    dbgLog('   tab-load display: ' + getComputedStyle(tabLoad).display, getComputedStyle(tabLoad).display !== 'none');
+    dbgLog('   (if "none" → click Load tab first, then re-run tests)', null);
+  }
+
+  // Test 3: drop zone
+  var dz = document.getElementById('inv-drop-zone');
+  dbgLog('3. drop zone exists: ' + !!dz, !!dz);
+  if (dz) {
+    var r = dz.getBoundingClientRect();
+    dbgLog('   rect: ' + Math.round(r.x) + ',' + Math.round(r.y) + '  ' + Math.round(r.width) + '×' + Math.round(r.height), r.width > 0);
+  }
+
+  // Test 4: inv_loadInvoiceFile fn
+  dbgLog('4. inv_loadInvoiceFile fn: ' + typeof inv_loadInvoiceFile, typeof inv_loadInvoiceFile === 'function');
+
+  // Test 5: custom image input (modal)
+  var mImg = document.getElementById('m_img_file');
+  dbgLog('5. m_img_file exists: ' + !!mImg, !!mImg);
+  if (mImg) {
+    dbgLog('   display: ' + getComputedStyle(mImg).display + '  opacity: ' + getComputedStyle(mImg).opacity, null);
+    var mPar = mImg.parentElement;
+    var mR = mPar.getBoundingClientRect();
+    dbgLog('   parent (label) w×h: ' + Math.round(mR.width) + '×' + Math.round(mR.height), mR.width > 0);
+  }
+
+  // Test 6: Apps Script ping
+  dbgLog('6. Testing Apps Script ping...', null);
+  fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({action:'ping'}), headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(j){dbgLog('   ping: ' + JSON.stringify(j), j.ok);})
+    .catch(function(e){dbgLog('   ping FAILED: ' + e.message, false);});
+}
+
+function dbgFixLoad() {
+  var log = document.getElementById('debug-log');
+  log.innerHTML += '<div style="color:#ffd43b">--- Fix Load ---</div>';
+
+  // Switch to load tab first
+  if (typeof inv_switchTab === 'function') {
+    inv_switchTab('load');
+    dbgLog('Switched to Load tab', null);
+  }
+
+  var inp = document.getElementById('inv-load-input');
+  if (!inp) { dbgLog('ERROR: inv-load-input not found', false); return; }
+
+  // Make it fully visible and positioned in flow
+  inp.style.cssText = 'position:static;width:200px;height:32px;opacity:1;display:block;margin:8px auto';
+  dbgLog('Input style set to visible. offsetW×H: ' + inp.offsetWidth + '×' + inp.offsetHeight, inp.offsetWidth > 0);
+
+  setTimeout(function() {
+    inp.click();
+    dbgLog('Called .click() — did file picker open? If yes → label opacity:0 approach is failing on this browser.', null);
+    dbgLog('If no → report what happened.', null);
+  }, 200);
+}
+</script>
+
 </body>
 </html>
