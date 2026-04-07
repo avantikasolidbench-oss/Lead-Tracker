@@ -4271,9 +4271,9 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
   <div class="no-print" style="margin-top:20px">
     <!-- Row 1: Load drag-drop zone -->
     <div id="inv-drop-zone" style="margin-bottom:8px;border:2px dashed #d4c9b0;border-radius:6px;padding:18px 20px;text-align:center;font-family:'DM Sans',sans-serif;font-size:12px;color:#7a6e5f;cursor:pointer;background:#faf7f2;transition:background 0.2s"
-      ondragover="event.preventDefault();this.style.background='#f0ebe0';this.style.borderColor='#c4922a';"
+      ondragover="event.preventDefault();event.stopPropagation();this.style.background='#f0ebe0';this.style.borderColor='#c4922a';"
       ondragleave="this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';"
-      ondrop="event.preventDefault();this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';var f=event.dataTransfer.files[0];if(f&&f.name.endsWith('.html')){var inp=document.getElementById('inv-load-input');var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;inv_loadInvoiceFile(inp);}else{alert('Please drop an .html invoice file');}">
+      ondrop="event.preventDefault();event.stopPropagation();this.style.background='#faf7f2';this.style.borderColor='#d4c9b0';var f=event.dataTransfer.files[0];if(f&&f.name.endsWith('.html')){var inp=document.getElementById('inv-load-input');var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;inv_loadInvoiceFile(inp);}else{alert('Please drop an .html invoice file');}">
       <div>↑ Drop invoice HTML file here</div>
       <div style="margin-top:4px;font-size:11px;color:#a09080">Drag &amp; drop your saved invoice .html file</div>
       <input id="inv-load-input" type="file" accept=".html" onchange="inv_loadInvoiceFile(this)" style="position:absolute;left:-9999px;opacity:0">
