@@ -154,7 +154,7 @@ td{padding:7px 8px;border-bottom:1px solid #F8FAFC;font-size:13px}
   font-family:'DM Sans',sans-serif; color:#1a1410;
 }
 #inv-app-inner { display:grid; grid-template-columns:360px 1fr; min-height:calc(100vh - 56px); }
-#pane-invoice .sidebar { background:var(--inv-sidebar-bg); color:#e8dfc8; display:flex; flex-direction:column; height:calc(100vh - 56px); position:sticky; top:56px; overflow:hidden; }
+#pane-invoice .sidebar { background:var(--inv-sidebar-bg); color:#e8dfc8; display:flex; flex-direction:column; height:calc(100vh - 56px); position:sticky; top:56px; overflow:visible; }
 #pane-invoice .sidebar-header { padding:24px 20px 16px; border-bottom:1px solid #2e2820; flex-shrink:0; }
 #pane-invoice .sidebar-header h1 { font-family:'Cormorant Garamond',serif; font-size:22px; color:#f5ead0; }
 #pane-invoice .sidebar-header .sub { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#6a5e50; margin-top:2px; }
@@ -4227,10 +4227,10 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
         <div style="font-size:10px;margin-top:4px">Drag your saved invoice onto this area</div>
       </div>
       <div style="text-align:center;font-size:10px;color:#6a5e50;margin-bottom:8px">— or —</div>
-      <label style="position:relative;overflow:hidden;display:block;width:100%;box-sizing:border-box;padding:9px;text-align:center;background:#2e2820;border:1px solid #3a3028;border-radius:4px;color:#e8dfc8;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer">
-        ↑ Browse for file
-        <input id="inv-load-input" type="file" accept=".html" onchange="inv_loadInvoiceFile(this)" style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer">
-      </label>
+      <div style="background:#2e2820;border:1px solid #3a3028;border-radius:4px;padding:9px;text-align:center">
+        <input id="inv-load-input" type="file" accept=".html" onchange="inv_loadInvoiceFile(this)"
+          style="font-size:11px;color:#e8dfc8;width:100%;cursor:pointer;background:transparent;border:none;font-family:'DM Sans',sans-serif">
+      </div>
     </div>
 
   </div>
@@ -4292,10 +4292,7 @@ setInterval(()=>{ if(currentRole) pullFromSheets(true); },2*60*1000);
 
   <!-- Action buttons at bottom — away from print area -->
   <div class="no-print" style="margin-top:20px">
-    <!-- Row 1: Load — use sidebar Load tab -->
-    <div style="margin-bottom:8px">
-      <button class="btn btn-outline" style="display:block;width:100%;box-sizing:border-box" onclick="inv_switchTab('load')">↑ Load Invoice →</button>
-    </div>
+
     <!-- Row 2: Save HTML + Clear All + Print -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-outline" onclick="inv_saveInvoiceHTML()">↓ Save HTML</button>
